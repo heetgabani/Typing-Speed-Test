@@ -61,7 +61,7 @@ const paragraphs = {
     ],
     60: [
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur ut augue a mauris iaculis aliquam. Proin venenatis, libero non facilisis tincidunt, metus libero suscipit turpis, at varius urna elit ac urna. Sed nec tortor et turpis eleifend maximus. Nunc volutpat ante vel lectus convallis, sed sodales leo tempus.",
-      "The early morning fog rolled over the hills, casting a soft glow on the quiet town below. Birds chirped in the distance, and the streets slowly began to wake up as people started their day. The air was fresh and cool, carrying the scent of dew-covered grass and blooming flowers, signaling the start of a new adventure.",
+      "Blockchain technology is the backbone of cryptocurrencies, enabling decentralized and secure transactions. However, its potential goes beyond digital currencies, with applications in supply chain management, identity verification, and more.",
     ],
     120: [
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec dui vel ligula gravida volutpat. Praesent sit amet vehicula erat. Nam interdum ipsum id dui cursus, sed pellentesque odio suscipit.",
@@ -80,12 +80,14 @@ export default function Home() {
   );
 
   const [userInput, setUserInput] = useState("");
-  const [timeRemaining, setTimeRemaining] = useState(15);
+  const [timeRemaining, setTimeRemaining] = useState(timeLimit);
   const [isRunning, setIsRunning] = useState(false);
   const [wpm, setWpm] = useState(0);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [missedWords, setMissedWords] = useState(0);
   const [spellingMistakes, setSpellingMistakes] = useState(0);
+  const [testCompleted, setTestCompleted] = useState(false);
+  const [typingScore, setTypingScore] = useState(0);
 
   const startTest = () => {
     setIsRunning(true);
@@ -94,6 +96,8 @@ export default function Home() {
     setWpm(0);
     setMissedWords(0);
     setSpellingMistakes(0);
+    setTypingScore(0);
+    setTestCompleted(false);
 
     if (intervalId) clearInterval(intervalId);
 
@@ -104,6 +108,8 @@ export default function Home() {
           setIsRunning(false);
           calculateWPM();
           calculateMistakes();
+          calculateTypingScore(); // Calculate the score
+          setTestCompleted(true);
           return 0;
         }
         return prev - 1;
@@ -138,6 +144,33 @@ export default function Home() {
     setSpellingMistakes(spelling);
   };
 
+  const calculateTypingScore = () => {
+    const originalWords = selectedParagraph.trim().split(/\s+/);
+    const totalWords = originalWords.length;
+
+    const wpmScore = Math.min((wpm / 100) * 10, 10);
+
+    const missedWordsPenalty = (missedWords / totalWords) * 3;
+
+    const spellingMistakesPenalty = (spellingMistakes / totalWords) * 2;
+
+    const score = 10 - missedWordsPenalty - spellingMistakesPenalty + wpmScore;
+
+    setTypingScore(Math.max(0, Math.round(score)));
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+  };
+
+  const handleSubmit = () => {
+    setTestCompleted(true);
+    setIsRunning(false);
+    calculateWPM();
+    calculateMistakes();
+    calculateTypingScore();
+  };
+
   return (
     <div className="flex flex-col items-center p-8 min-h-screen bg-gradient-to-b from-purple-600 to-blue-500 text-white">
       <h1 className="text-4xl font-bold mb-4 animate-bounce">
@@ -151,8 +184,12 @@ export default function Home() {
               key={level}
               className={`p-3 border rounded-lg transform hover:scale-105 transition-transform duration-200 ${
                 difficultyLevel === level
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200"
+                  ? level === "easy"
+                    ? "bg-green-500 text-white"
+                    : level === "medium"
+                      ? "bg-yellow-500 text-white"
+                      : "bg-red-500 text-white"
+                  : "bg-gray-200 text-black"
               }`}
               onClick={() => {
                 setDifficultyLevel(level as "easy" | "medium" | "hard");
@@ -174,7 +211,9 @@ export default function Home() {
             <button
               key={time}
               className={`p-3 border rounded-lg transform hover:scale-105 transition-transform duration-200 ${
-                timeLimit === time ? "bg-blue-500 text-white" : "bg-gray-200"
+                timeLimit === time
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-black"
               }`}
               onClick={() => {
                 setTimeLimit(time);
@@ -201,6 +240,7 @@ export default function Home() {
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           disabled={!isRunning}
+          onPaste={handlePaste} // Prevent pasting
         ></textarea>
 
         <button
@@ -211,16 +251,58 @@ export default function Home() {
           {isRunning ? "Test Running..." : "Start Test"}
         </button>
 
-        {!isRunning && wpm > 0 && (
-          <div className="mt-4">
-            <h2 className="text-2xl font-bold text-green-500 animate-fade-in">
-              Your WPM: {wpm}
-            </h2>
-            <p className="mt-2 text-lg">Missed Words: {missedWords}</p>
-            <p className="mt-2 text-lg">
-              Spelling Mistakes: {spellingMistakes}
-            </p>
+        {/* Animated Timeline */}
+        {isRunning && (
+          <div className="mt-4 w-full h-4 bg-gray-300 rounded-full">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${(timeRemaining / timeLimit) * 100}%`,
+                backgroundColor: timeRemaining <= 5 ? "red" : "green",
+                transition: "width 1s ease-out",
+              }}
+            ></div>
           </div>
+        )}
+
+        {/* Display time remaining while the test is running */}
+        {isRunning && (
+          <div className="mt-4 text-lg">
+            Time Remaining: {timeRemaining} seconds
+          </div>
+        )}
+
+        {/* Button to submit before the time runs out */}
+        {isRunning && !testCompleted && (
+          <button
+            className="w-full p-3 bg-yellow-500 text-white rounded-lg mt-4 transform hover:scale-105 transition-transform duration-200"
+            onClick={handleSubmit}
+          >
+            Submit Before Time
+          </button>
+        )}
+
+        {testCompleted && (
+          <>
+            <button
+              className="w-full p-3 bg-green-500 text-white rounded-lg mt-4 transform hover:scale-105 transition-transform duration-200"
+              onClick={handleSubmit}
+            >
+              Submit Test
+            </button>
+            <div className="mt-4">
+              <h2 className="text-2xl font-bold text-green-500 animate-fade-in">
+                Your WPM: {wpm}
+              </h2>
+              <p className="mt-2 text-lg">Missed Words: {missedWords}</p>
+              <p className="mt-2 text-lg">
+                Spelling Mistakes: {spellingMistakes}
+              </p>
+              <p className="mt-2 text-lg">
+                Your Typing Score: {typingScore}/10
+              </p>
+            </div>
+          </>
         )}
       </div>
     </div>
