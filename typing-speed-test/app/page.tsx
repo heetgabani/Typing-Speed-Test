@@ -75,12 +75,12 @@ export default function Home() {
   };
 
   const shareOnLinkedIn = () => {
-    const url = `https://www.linkedin.com/shareArticle?mini=true&url=https://typingspeedtest.com&title=My Typing Speed&summary=I just scored ${wpm} WPM on the Typing Speed Test!`;
+    const url = `https://www.linkedin.com/shareArticle?mini=true&url=https://typing-speed-test-yn31.vercel.app/&title=My Typing Speed&summary=I just scored ${wpm} WPM on the Typing Speed Test!`;
     window.open(url, "_blank");
   };
 
   const shareOnTwitter = () => {
-    const url = `https://twitter.com/intent/tweet?text=I just scored ${wpm} WPM on the Typing Speed Test! Try it out: https://typingspeedtest.com`;
+    const url = `https://twitter.com/intent/tweet?text=I just scored ${wpm} WPM on the Typing Speed Test! Try it out: https://typing-speed-test-yn31.vercel.app/`;
     window.open(url, "_blank");
   };
 
