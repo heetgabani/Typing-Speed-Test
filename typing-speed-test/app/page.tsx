@@ -105,10 +105,10 @@ export default function Home() {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(id);
+          setIntervalId(null);
           setIsRunning(false);
           calculateWPM();
           calculateMistakes();
-          calculateTypingScore(); // Calculate the score
           setTestCompleted(true);
           return 0;
         }
@@ -144,38 +144,25 @@ export default function Home() {
     setSpellingMistakes(spelling);
   };
 
-  const calculateTypingScore = () => {
-    const originalWords = selectedParagraph.trim().split(/\s+/);
-    const totalWords = originalWords.length;
-
-    const wpmScore = Math.min((wpm / 100) * 10, 10);
-
-    const missedWordsPenalty = (missedWords / totalWords) * 3;
-
-    const spellingMistakesPenalty = (spellingMistakes / totalWords) * 2;
-
-    const score = 10 - missedWordsPenalty - spellingMistakesPenalty + wpmScore;
-
-    setTypingScore(Math.max(0, Math.round(score)));
-  };
-
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     e.preventDefault();
   };
 
   const handleSubmit = () => {
-    setTestCompleted(true);
+    if (intervalId) clearInterval(intervalId);
+    setIntervalId(null);
     setIsRunning(false);
+    setTestCompleted(true);
     calculateWPM();
     calculateMistakes();
-    calculateTypingScore();
   };
 
   return (
     <div className="flex flex-col items-center p-8 min-h-screen bg-gradient-to-b from-purple-600 to-blue-500 text-white">
-      <h1 className="text-4xl font-bold mb-4 animate-bounce">
+      <h1 className="text-4xl font-bold mb-4 animate-bounce animate-fade-in transform transition-transform duration-500 hover:scale-110">
         Typing Speed Test
       </h1>
+
       <div className="w-full max-w-3xl p-6 bg-white text-black rounded-xl shadow-lg">
         <h2 className="text-lg font-semibold mb-2">Select Difficulty Level:</h2>
         <div className="flex gap-2 mb-4">
@@ -240,7 +227,7 @@ export default function Home() {
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           disabled={!isRunning}
-          onPaste={handlePaste} // Prevent pasting
+          onPaste={handlePaste}
         ></textarea>
 
         <button
@@ -251,7 +238,6 @@ export default function Home() {
           {isRunning ? "Test Running..." : "Start Test"}
         </button>
 
-        {/* Animated Timeline */}
         {isRunning && (
           <div className="mt-4 w-full h-4 bg-gray-300 rounded-full">
             <div
@@ -265,14 +251,12 @@ export default function Home() {
           </div>
         )}
 
-        {/* Display time remaining while the test is running */}
         {isRunning && (
           <div className="mt-4 text-lg">
             Time Remaining: {timeRemaining} seconds
           </div>
         )}
 
-        {/* Button to submit before the time runs out */}
         {isRunning && !testCompleted && (
           <button
             className="w-full p-3 bg-yellow-500 text-white rounded-lg mt-4 transform hover:scale-105 transition-transform duration-200"
@@ -297,9 +281,6 @@ export default function Home() {
               <p className="mt-2 text-lg">Missed Words: {missedWords}</p>
               <p className="mt-2 text-lg">
                 Spelling Mistakes: {spellingMistakes}
-              </p>
-              <p className="mt-2 text-lg">
-                Your Typing Score: {typingScore}/10
               </p>
             </div>
           </>
