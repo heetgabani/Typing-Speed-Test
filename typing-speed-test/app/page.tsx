@@ -262,7 +262,7 @@ export default function Home() {
             className="w-full p-3 bg-yellow-500 text-white rounded-lg mt-4 transform hover:scale-105 transition-transform duration-200"
             onClick={handleSubmit}
           >
-            Submit Before Time
+            Submit
           </button>
         )}
 
