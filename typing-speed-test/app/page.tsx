@@ -87,7 +87,6 @@ export default function Home() {
   const [missedWords, setMissedWords] = useState(0);
   const [spellingMistakes, setSpellingMistakes] = useState(0);
   const [testCompleted, setTestCompleted] = useState(false);
-  const [typingScore, setTypingScore] = useState(0);
 
   const startTest = () => {
     setIsRunning(true);
@@ -96,7 +95,6 @@ export default function Home() {
     setWpm(0);
     setMissedWords(0);
     setSpellingMistakes(0);
-    setTypingScore(0);
     setTestCompleted(false);
 
     if (intervalId) clearInterval(intervalId);
